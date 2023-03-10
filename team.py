@@ -11,7 +11,7 @@ metadata = {
     # - Allowed characters: A-Z, a-z, 0-9, -, _
     # - Minimum length: 3 characters
     # - Maximum length: 20 characters
-    "team_name": f"cHaTgPt", 
+    "team_name": f"Blonde-Brainwaves", 
 
     # Fill in the student IDs and emails of both team members here. There must
     # be exactly two members in the list. 
