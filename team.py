@@ -11,7 +11,7 @@ metadata = {
     # - Allowed characters: A-Z, a-z, 0-9, -, _
     # - Minimum length: 3 characters
     # - Maximum length: 20 characters
-    "team_name": f"", 
+    "team_name": f"cHaTgPt", 
 
     # Fill in the student IDs and emails of both team members here. There must
     # be exactly two members in the list. 
@@ -22,9 +22,9 @@ metadata = {
             "email": "jpbaur@student.unimelb.edu.au" # Must be @student.unimelb.edu.au address
         },
         {
-            "name": "",
-            "student_id": "",
-            "email": "" # Must be @student.unimelb.edu.au address
+            "name": "Tatyana Gordon",
+            "student_id": "1403898",
+            "email": "tatyanag@student.unimelb.edu.au" # Must be @student.unimelb.edu.au address
         }
     ]
 }
