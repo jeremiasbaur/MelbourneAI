@@ -147,7 +147,8 @@ class CoordinateSystem2():
         if power>6:
             self._coordinate_system.pop((r%7,q%7))
         elif color=='e':
-            self._coordinate_system.pop((r%7,q%7))
+            if (r%7,q%7) in self._coordinate_system:
+                self._coordinate_system.pop((r%7,q%7))
         else:
             self._coordinate_system[(r%7,q%7)] = (color, power)
     
@@ -201,7 +202,31 @@ class CoordinateSystem2():
         return max(abs(r1-r2),abs(q1-q2))
     
     def calculate_distance2(self, r1, q1, r2, q2) -> int:
+        tr = 3-r1
+        tq = 3-q1
+        r1 = (r1+tr)%7
+        r2 = (r2+tr)%7
+        q1 = (q1+tq)%7
+        q2 = (q2+tq)%7
+
+        if (r2,q2) in set([(0,0),(1,0),(0,1),(6,5),(5,6),(6,6)]):
+            return 4
+
         return (abs(r1-r2)+abs(q1+r1-r2-q2)+abs(q1-q2))/2
+
+
+    def heuristic(self, blue_count=False) -> int:
+        nec = self.find_non_empty_cells()
+        min_distance = 0
+        for red in nec['r']:
+            for blue in nec['b']:
+                if min_distance==0: min_distance = self.calculate_distance2(red[0],red[1], blue[0], blue[1])
+                else:
+                    min_distance = min(min_distance, self.calculate_distance2(red[0],red[1], blue[0], blue[1]))
+        if blue_count:
+            return min_distance + len(nec['b'])
+        return min_distance
+
 
         
 
