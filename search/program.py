@@ -7,7 +7,7 @@ from copy import deepcopy
 from .utils import render_board
 from .coordinate_system import CoordinateSystem
 
-def search(input: dict[tuple, tuple], print_moves=False, heuristic=False, sixdiv=False, bluecounts=False, perc=False) -> list[tuple]:
+def search(input: dict[tuple, tuple], print_moves=False, heuristic=True, sixdiv=True, bluecounts=False, perc=True) -> list[tuple]:
     """
     This is the entry point for your submission. The input is a dictionary
     of board cell states, where the keys are tuples of (r, q) coordinates, and
@@ -51,7 +51,7 @@ def search(input: dict[tuple, tuple], print_moves=False, heuristic=False, sixdiv
             final_state = new_item[5]
             print("reached final state!", new_item[4])
             break
-
+        
         for red_cell in non_empty_cells['r']:
             for spread_dir in [(-1,1),(0,1),(1,0),(1,-1),(0,-1),(-1,0)]:
                 new_state = CoordinateSystem()
@@ -68,7 +68,7 @@ def search(input: dict[tuple, tuple], print_moves=False, heuristic=False, sixdiv
                         h /=6
 
                     steps = new_item[4]+1
-                    cost = steps + h + p
+                    cost = steps + max(h, p)
                     
                     item = (cost, new_state, new_item[5], move, steps, new_hash)
                     heapq.heappush(q, item) # q.put((len(nec['b']), new_state))

@@ -90,12 +90,8 @@ class CoordinateSystem():
             self.set(new_cell[0], new_cell[1], current_cell[0], new_cell_state[1]+1)
 
         self.set(r, q, 'e', 0)
-
-    def calculate_distance(self, r1, q1, r2, q2) -> int:
-        # uses approximation:
-        return max(abs(r1-r2),abs(q1-q2))
     
-    def calculate_distance2(self, r1, q1, r2, q2) -> int:
+    def calculate_distance(self, r1, q1, r2, q2) -> int:
         tr = 3-r1
         tq = 3-q1
         r1 = (r1+tr)%7
@@ -108,15 +104,18 @@ class CoordinateSystem():
 
         return (abs(r1-r2)+abs(q1+r1-r2-q2)+abs(q1-q2))/2
 
+    def calculate_distance_approx(self, r1, q1, r2, q2) -> int:
+        # uses approximation:   
+        return max(abs(r1-r2),abs(q1-q2))
 
     def heuristic(self, blue_count=False) -> int:
         nec = self.find_non_empty_cells()
         min_distance = 0
         for red in nec['r']:
             for blue in nec['b']:
-                if min_distance==0: min_distance = self.calculate_distance2(red[0],red[1], blue[0], blue[1])
+                if min_distance==0: min_distance = self.calculate_distance(red[0],red[1], blue[0], blue[1])
                 else:
-                    min_distance = min(min_distance, self.calculate_distance2(red[0],red[1], blue[0], blue[1]))
+                    min_distance = min(min_distance, self.calculate_distance(red[0],red[1], blue[0], blue[1]))
         if blue_count:
             return min_distance + len(nec['b'])
         return min_distance
