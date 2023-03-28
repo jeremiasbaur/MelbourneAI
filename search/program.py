@@ -5,9 +5,9 @@ from copy import deepcopy
 
 
 from .utils import render_board
-from .coordinate_system import CoordinateSystem, CoordinateSystem2
+from .coordinate_system import CoordinateSystem
 
-def search(input: dict[tuple, tuple], print_moves=False, heuristic=False, sixdiv=False, bluecounts=False) -> list[tuple]:
+def search(input: dict[tuple, tuple], print_moves=False, heuristic=False, sixdiv=False, bluecounts=False, perc=False) -> list[tuple]:
     """
     This is the entry point for your submission. The input is a dictionary
     of board cell states, where the keys are tuples of (r, q) coordinates, and
@@ -26,7 +26,7 @@ def search(input: dict[tuple, tuple], print_moves=False, heuristic=False, sixdiv
     explored = dict()
     backtracking = dict()
 
-    cs = CoordinateSystem2() # initial state
+    cs = CoordinateSystem() # initial state
     cs.import_state(input)
     start_state = hash(cs)
     final_state = None
@@ -42,6 +42,8 @@ def search(input: dict[tuple, tuple], print_moves=False, heuristic=False, sixdiv
         current_state = new_item[1] # q.get()[1]
         non_empty_cells = current_state.find_non_empty_cells()
         # explored[new_item[2]] = new_item[4]
+        backtracking[new_item[5]] = new_item
+        explored[new_item[5]] = new_item[4]
 
         counter += 1
 
@@ -52,7 +54,7 @@ def search(input: dict[tuple, tuple], print_moves=False, heuristic=False, sixdiv
 
         for red_cell in non_empty_cells['r']:
             for spread_dir in [(-1,1),(0,1),(1,0),(1,-1),(0,-1),(-1,0)]:
-                new_state = CoordinateSystem2()
+                new_state = CoordinateSystem()
                 new_state = deepcopy(current_state) # new_state.import_state_list(current_state.export_state_list())
 
                 new_state.apply_spread(red_cell[0],red_cell[1], spread_dir[0],spread_dir[1])
@@ -61,18 +63,18 @@ def search(input: dict[tuple, tuple], print_moves=False, heuristic=False, sixdiv
                 new_hash = hash(new_state)
                 if new_hash not in explored:
                     h = new_state.heuristic(blue_count=bluecounts) if heuristic else 0
-                    
+                    p = new_state.percentage_heuristic() if perc else 0
                     if sixdiv:
                         h /=6
 
                     steps = new_item[4]+1
-                    cost = steps + h
+                    cost = steps + h + p
                     
                     item = (cost, new_state, new_item[5], move, steps, new_hash)
                     heapq.heappush(q, item) # q.put((len(nec['b']), new_state))
                     # q.append(item)
-                    backtracking[item[5]] = item
-                    explored[item[5]] = item[4]
+                    # backtracking[item[5]] = item
+                    # explored[item[5]] = item[4]
             
     moves = []
     moves_states = []
@@ -84,13 +86,6 @@ def search(input: dict[tuple, tuple], print_moves=False, heuristic=False, sixdiv
         current_state = move[2]
         #print(move[1])
 
-    """while len(q)!=0:
-        state = heapq.heappop(q)[1]
-        print(state)"""
-    
-    """for i in range(20):
-        print(q[-i][1])"""
-
     #print(render_board(input, ansi=False))
 
     moves.reverse()
@@ -100,7 +95,7 @@ def search(input: dict[tuple, tuple], print_moves=False, heuristic=False, sixdiv
             if print_moves:
                 print(i)
 
-    print(f'Done in {time.time()-t1} seconds')
+    print(f'Mode: heuristic: {heuristic}, sixdiv: {sixdiv}, bluecounts: {bluecounts}, percentage: {perc}\nDone in {time.time()-t1} seconds\n')
     
     # Here we're returning "hardcoded" actions for the given test.csv file.
     # Of course, you'll need to replace this with an actual solution...

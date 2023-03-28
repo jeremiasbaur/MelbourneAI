@@ -1,9 +1,10 @@
 from search import program, coordinate_system
 
 tests = ['test.csv', 
+         'test9.csv',
          #'test2.csv', 
          #'test3.csv',
-         'test4.csv', 
+         #'test4.csv', 
          #'test5.csv',
          'test6.csv',
          #'test7.csv',
@@ -19,8 +20,21 @@ for files in tests:
         ]}
 
     print(f'Test {files}:')
-    program.search(d, False, True, False, True)
-    program.search(d, False, True, True, False)
-    program.search(d, False, True, True, True)
-    program.search(d, False, True, False, False)
+    # print(1, end=' ')
+    # program.search(d, print_moves=False, heuristic=True, sixdiv=False, bluecounts=True)
+    # print(2, end=' ')
+    # program.search(d, print_moves=False, heuristic=True, sixdiv=False, bluecounts=True, perc=True)
+    # print(3, end=' ')
+    # program.search(d, False, True, True, False, True)
+    print(4, end=' ')
+    program.search(d, False, True, False, True, False)
+    print(5, end=' ')
+    program.search(d, False, True, True, False, True)
+    # print(6, end=' ')
+    # program.search(d, False, True, True, False)
+    # print(7, end=' ')
+    # program.search(d, False, True, True, True)
+    # print(8, end=' ')
+    # program.search(d, False, True, False, False)
+    print(9, end=' ')
     program.search(d, False, False)
