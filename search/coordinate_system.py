@@ -24,9 +24,6 @@ class CoordinateSystem():
     def __le__(self, other):
         return self.find_non_empty_cells()['r'] <= other.find_non_empty_cells()['r']
 
-    def __copy__(self):
-        pass
-
     def convert_to_dict(self) -> dict:
         return self._coordinate_system
 

@@ -36,20 +36,16 @@ def search(input: dict[tuple, tuple], print_moves=False, heuristic=True, sixdiv=
     counter = 0
     if print_moves: print(cs)
     
-    while len(q) != 0: # q.empty() is False:
+    while len(q) != 0:
         new_item = heapq.heappop(q)
-        # new_item = q.pop()
-        current_state = new_item[1] # q.get()[1]
+        current_state = new_item[1]
         non_empty_cells = current_state.find_non_empty_cells()
-        # explored[new_item[2]] = new_item[4]
-        backtracking[new_item[5]] = new_item
-        explored[new_item[5]] = new_item[4]
-
+       
         counter += 1
 
         if len(non_empty_cells['b'])==0:
             final_state = new_item[5]
-            print("reached final state!", new_item[4])
+            #print("reached final state!", new_item[4])
             break
         
         for red_cell in non_empty_cells['r']:
@@ -62,19 +58,19 @@ def search(input: dict[tuple, tuple], print_moves=False, heuristic=True, sixdiv=
                 
                 new_hash = hash(new_state)
                 if new_hash not in explored:
-                    h = new_state.heuristic(blue_count=bluecounts) if heuristic else 0
-                    p = new_state.percentage_heuristic() if perc else 0
-                    if sixdiv:
-                        h /=6
+                    h = new_state.heuristic(blue_count=False) # if heuristic else 0
+                    p = new_state.percentage_heuristic() # if perc else 0
+                    #if sixdiv:
+                    h /=6
 
                     steps = new_item[4]+1
                     cost = steps + max(h, p)
                     
                     item = (cost, new_state, new_item[5], move, steps, new_hash)
-                    heapq.heappush(q, item) # q.put((len(nec['b']), new_state))
-                    # q.append(item)
-                    # backtracking[item[5]] = item
-                    # explored[item[5]] = item[4]
+                    heapq.heappush(q, item)
+                    
+                    backtracking[item[5]] = item
+                    explored[item[5]] = item[4]
             
     moves = []
     moves_states = []
@@ -84,19 +80,12 @@ def search(input: dict[tuple, tuple], print_moves=False, heuristic=True, sixdiv=
         moves.append(move[3])
         moves_states.append(move[1])
         current_state = move[2]
-        #print(move[1])
-
-    #print(render_board(input, ansi=False))
 
     moves.reverse()
     moves_states.reverse()
-    if True:
+    if False:
         for i in moves_states:
             if print_moves:
                 print(i)
 
-    print(f'Mode: heuristic: {heuristic}, sixdiv: {sixdiv}, bluecounts: {bluecounts}, percentage: {perc}\nDone in {time.time()-t1} seconds\n')
-    
-    # Here we're returning "hardcoded" actions for the given test.csv file.
-    # Of course, you'll need to replace this with an actual solution...
     return moves
