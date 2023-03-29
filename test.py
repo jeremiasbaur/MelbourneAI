@@ -6,8 +6,8 @@ if __name__=='__main__':
             'test9.csv',
             #'test2.csv', 
             #'test3.csv',
-            #'test4.csv', 
-            #'test5.csv',
+            'test4.csv', 
+            'test5.csv',
             'test6.csv',
             #'test7.csv',
             'test8.csv',
@@ -31,9 +31,9 @@ if __name__=='__main__':
         # print(4, end=' ')
         # program.search(d, False, True, False, True, False)
         print(5, end=' ')
-        program.search(d, False, True, True, False, True)
-        print(6, end=' ')
-        program.search(d, False, True, True, False, False)
+        program.search(d, False, True, True, False)
+        #print(6, end=' ')
+        #program.search(d, False, True, True, False, False)
         # print(7, end=' ')
         # program.search(d, False, True, True, True)
         # print(8, end=' ')

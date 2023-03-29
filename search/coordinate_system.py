@@ -107,16 +107,30 @@ class CoordinateSystem():
 
     def heuristic(self, blue_count=False) -> int:
         nec = self.find_non_empty_cells()
-        min_distance = 0
+        min_distance = 10000
+        red_value = 1
+        if len(nec['b'])==0:
+            return 0
         for red in nec['r']:
             for blue in nec['b']:
-                if min_distance==0: min_distance = self.calculate_distance(red[0],red[1], blue[0], blue[1])
-                else:
-                    min_distance = min(min_distance, self.calculate_distance(red[0],red[1], blue[0], blue[1]))
+                if min_distance>self.calculate_distance(red[0],red[1], blue[0], blue[1]):
+                    #min_distance = min(min_distance, self.calculate_distance(red[0],red[1], blue[0], blue[1]))
+                    min_distance=self.calculate_distance(red[0],red[1], blue[0], blue[1])
+                    red_value = red[2]
+
         if blue_count:
             return min_distance + len(nec['b'])
-        return min_distance
+        return min_distance if min_distance==1 else min_distance/red_value
     
+    def blue_heuristic(self):
+        nec = self.find_non_empty_cells()
+        blue_count = len(nec['b'])
+        max_red = 0
+        for red in nec['r']:
+            max_red = max(max_red, red[2])
+
+        return blue_count-max_red
+
     def percentage_heuristic(self):
         nec = self.find_non_empty_cells()
         r_power = 0
