@@ -123,6 +123,7 @@ class CoordinateSystem():
         return min_distance if min_distance==1 else min_distance/red_value
     
     def blue_heuristic(self):
+        # unused in Part A
         nec = self.find_non_empty_cells()
         blue_count = len(nec['b'])
         max_red = 0

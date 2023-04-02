@@ -58,17 +58,9 @@ def search(input: dict[tuple, tuple], print_moves=False, heuristic=True, sixdiv=
                 
                 new_hash = hash(new_state)
                 if new_hash not in explored:
-                    # nec = new_state.find_non_empty_cells()
-                    # blue = new_state.blue_heuristic()
-                    # max_red = 0
-                    # for red in nec['r']:
-                    #     max_red = max(max_red, red[2])
-
-                    h = new_state.heuristic(blue_count=False) # if heuristic else 0
-                    p = new_state.percentage_heuristic() # if perc else 0
-                    #if sixdiv:
-                    #h /= 6 
-
+                    h = new_state.heuristic(blue_count=False)
+                    p = new_state.percentage_heuristic()
+                    
                     steps = new_item[4]+1
                     h = max(h,p) if heuristic else 0
                     cost = steps + h
