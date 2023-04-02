@@ -45,7 +45,7 @@ def search(input: dict[tuple, tuple], print_moves=False, heuristic=True, sixdiv=
 
         if len(non_empty_cells['b'])==0:
             final_state = new_item[5]
-            print("reached final state!", new_item[4],'after',time.time()-t1)
+            #print("reached final state!", new_item[4],'after',time.time()-t1)
             break
         
         for red_cell in non_empty_cells['r']:
@@ -64,8 +64,7 @@ def search(input: dict[tuple, tuple], print_moves=False, heuristic=True, sixdiv=
                     steps = new_item[4]+1
                     h = max(h,p) if heuristic else 0
                     cost = steps + h
-                    #if len(nec['b'])==0:
-                    #print(cost, steps, (h, p, blue),"\n", new_state,"\nend")
+                    
                     item = (cost, new_state, new_item[5], move, steps, new_hash)
                     heapq.heappush(q, item)
                     

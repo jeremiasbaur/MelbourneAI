@@ -120,7 +120,7 @@ class CoordinateSystem():
 
         if blue_count:
             return min_distance + len(nec['b'])
-        return min_distance if min_distance==1 else min_distance/red_value
+        return min_distance/6 #if min_distance==1 else min_distance/red_value
     
     def blue_heuristic(self):
         # unused in Part A
