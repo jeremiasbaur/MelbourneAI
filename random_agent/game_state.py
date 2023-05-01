@@ -1,8 +1,10 @@
 from copy import copy, deepcopy
 
 from .utils import render_board
+from referee.game import \
+    PlayerColor, Action, SpawnAction, SpreadAction, HexPos, HexDir
 
-class CoordinateSystem():
+class GameState():
     """
     This is the state class of the game board.
     The board is stored in a 2D array of lists.
@@ -49,6 +51,7 @@ class CoordinateSystem():
 
         given_state: dict of state in the format of the class
         """
+        _coordinate_system = dict()
         for key, value in given_state.items():
             self._coordinate_system[(key[0], key[1])] = value # r is first coordinate and q is second coordinate
 
@@ -64,7 +67,7 @@ class CoordinateSystem():
         cells['b'] = []
 
         for key, item in self._coordinate_system.items():
-            cells[item[0]].append((key[0], key[1], item[1]))
+            cells[item[0]].append((key[0], key[1], item[1])) # r, q, value
         return cells
     
     def apply_spread(self,r,q,d_r,d_q):
@@ -88,6 +91,12 @@ class CoordinateSystem():
 
         self.set(r, q, 'e', 0)
     
+    def apply_action(self, action, color):
+        if type(action)==SpawnAction:
+            self.set(action.cell.r, action.cell.q, color, 1)
+        elif type(action)==SpreadAction:
+            self.apply_spread(action.cell.r, action.cell.q, action.direction.r, action.direction.q)
+
     def calculate_distance(self, r1, q1, r2, q2) -> int:
         tr = 3-r1
         tq = 3-q1
