@@ -114,22 +114,24 @@ class GameState:
         # uses approximation:   
         return max(abs(r1-r2),abs(q1-q2))
 
-    def heuristic(self, blue_count=False) -> int:
+    def heuristic(self, main_color, blue_count=False) -> int:
         nec = self.find_non_empty_cells()
         min_distance = 10000
         red_value = 1
-        if len(nec['b'])==0:
+
+        opponent_color = 'r' if main_color == 'b' else 'b'
+        if len(nec[opponent_color])==0:
             return 0
-        for red in nec['r']:
-            for blue in nec['b']:
+        for red in nec[main_color]:
+            for blue in nec[opponent_color]:
                 if min_distance>self.calculate_distance(red[0],red[1], blue[0], blue[1]):
                     #min_distance = min(min_distance, self.calculate_distance(red[0],red[1], blue[0], blue[1]))
                     min_distance=self.calculate_distance(red[0],red[1], blue[0], blue[1])
                     red_value = red[2]
 
         if blue_count:
-            return min_distance + len(nec['b'])
-        return min_distance/6 #if min_distance==1 else min_distance/red_value
+            return min_distance + len(nec[opponent_color])
+        return min_distance if min_distance==1 else min_distance/red_value
     
     def blue_heuristic(self):
         # unused in Part A

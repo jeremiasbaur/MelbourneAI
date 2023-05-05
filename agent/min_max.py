@@ -1,4 +1,6 @@
 from copy import copy, deepcopy
+import random
+import math
 
 from referee.game import \
     PlayerColor, Action, SpawnAction, SpreadAction, HexPos, HexDir
@@ -30,22 +32,22 @@ class MiniMax:
         
         empty_cells = self._all_cells - non_empty_cells
 
-        for empty in empty_cells:
+        for empty in random.choices(list(empty_cells), k=5):
             possible_moves.append(SpawnAction(HexPos(empty[0],empty[1])))
         return possible_moves
 
 
-    def minimax_decision(self, state, color) -> list:
+    def minimax_decision(self, state, color, depth) -> list:
         possible_moves = self.find_possible_moves(state, color)
         #state_hash = hash(state)
         #self._memo[state_hash] 
         moves = []
-        new_state = deepcopy(state)
 
-        for move in possible_moves:
+        for move in random.choices(possible_moves, k=5):
+            new_state = deepcopy(state)
             new_state.apply_action(move, color)
-            moves.append((self.minimax_value(new_state, color), move))
-        return moves        
+            moves.append((self.minimax_value(new_state, color, depth), move, depth))
+        return moves
 
 
     def terminal_state_check(self, state, color):
@@ -54,6 +56,15 @@ class MiniMax:
         opponent_color = 'r' if color==PlayerColor.BLUE else 'b'
         our_color = 'r' if color==PlayerColor.RED else 'b'
 
+        total_sum = 0
+        for blue in cells['b']:
+            total_sum += blue[2]
+        for red in cells['r']:
+            total_sum += red[2]
+
+        if total_sum>49:
+            return (True, False)
+
         if len(cells[opponent_color]) == 0:
             return (True, True)
         elif len(cells[our_color])==0:
@@ -61,24 +72,35 @@ class MiniMax:
         return (False, False)
 
 
-    def utilty_state_function(self, state, color) -> float:
+    def utility_state_function(self, state, color) -> float:
         """
-        returns a utility value for a given state
+        returns a eval value for a given state
         """
         cells = state.find_non_empty_cells()
 
-        utiltiy_value_state = 0
+        power_value = 1.2
+
+        utilitiy_value_state = 0
         if color == PlayerColor.BLUE:
-            for key, value in cells['b'].items():
-                utiltiy_value_state += value[2]
+            for value in cells['b']:
+                utilitiy_value_state += value[2]**1.2
         else:
-            for key, value in cells['r'].items():
-                utiltiy_value_state += value[2]
-        return utiltiy_value_state
+            for value in cells['r']:
+                utilitiy_value_state += value[2]**1.2
+        
+        final_steps = state.heuristic('b' if color==PlayerColor.BLUE else 'r')
+        
+        #parameters:
+        a=1
+        b=2
+
+        return a*utilitiy_value_state + b*(1/(-1 if final_steps==1 else final_steps))
     
 
-    def minimax_value(self, state, color):
-        self._depth += 1
+    def minimax_value(self, state, color, depth):
+        if depth>4:
+            return self.utility_state_function(state, color)
+        
         over, winner = self.terminal_state_check(state, color)
         if over:
             if winner:
@@ -87,7 +109,8 @@ class MiniMax:
         
         other_color = 'r' if color=='b' else 'b'
 
+        res = self.minimax_decision(state, other_color, depth+1)
         if color == self._color:
-            max(self.minimax_decision(state, other_color))
+            return min(res, key=lambda x:x[0])[0]
         else:
-            min(self.minimax_decision(state, other_color))
+            return max(res, key=lambda x:x[0])[0]

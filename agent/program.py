@@ -13,7 +13,7 @@ from .game_state import GameState
 # intended to serve as an example of how to use the referee API -- obviously
 # this is not a valid strategy for actually playing the game!
 
-class RandomAgent:
+class Agent:
     def __init__(self, color: PlayerColor, **referee: dict):
         """
         Initialise the agent.
@@ -36,13 +36,17 @@ class RandomAgent:
             return SpawnAction(HexPos(3, 3)) # doesn't matter where we spawn, every pos is the same
 
         minimax = MiniMax(self.color2char(self._color))
+        
+        #print(self._state)
 
         match self._color:
             case PlayerColor.RED:
-                move = max(minimax.minimax_decision(self._state, 'r'), key=lambda x:x[0])
+                move = max(minimax.minimax_decision(self._state, 'r',0), key=lambda x:x[0])
+                print("red", move)
                 return move[1]
             case PlayerColor.BLUE:
-                move = max(minimax.minimax_decision(self._state, 'r'), key=lambda x:x[0])
+                move = max(minimax.minimax_decision(self._state, 'b',0), key=lambda x:x[0])
+                print("blue", move)
                 return move[1]
 
     def turn(self, color: PlayerColor, action: Action, **referee: dict):
@@ -64,7 +68,7 @@ class RandomAgent:
         if color == PlayerColor.BLUE: return 'b'
         if color == PlayerColor.RED: return 'r'
 
-class Agent:
+class RandomAgent:
     def __init__(self, color: PlayerColor, **referee: dict):
         """
         Initialise the agent.
