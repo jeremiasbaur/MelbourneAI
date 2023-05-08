@@ -36,7 +36,7 @@ class GameState:
     
     def set(self, r, q, color, power):
         if color not in ['r','b','e']:
-            raise Exception("Impossible color!")
+            raise Exception("Impossible color!", color)
         if power>6:
             self._coordinate_system.pop((r%7,q%7))
         elif color=='e':
@@ -121,7 +121,7 @@ class GameState:
 
         opponent_color = 'r' if main_color == 'b' else 'b'
         if len(nec[opponent_color])==0:
-            return 0
+            return 0.01
         for red in nec[main_color]:
             for blue in nec[opponent_color]:
                 if min_distance>self.calculate_distance(red[0],red[1], blue[0], blue[1]):
@@ -153,3 +153,7 @@ class GameState:
             b_power += cell[2]
 
         return b_power / (r_power+b_power)
+    
+    def color2char(self, color):
+        if color == PlayerColor.BLUE: return 'b'
+        if color == PlayerColor.RED: return 'r'

@@ -35,18 +35,20 @@ class Agent:
         if self._game_turns == 0:
             return SpawnAction(HexPos(3, 3)) # doesn't matter where we spawn, every pos is the same
 
-        minimax = MiniMax(self.color2char(self._color))
+        minimax = MiniMax(self._color)
         
         #print(self._state)
 
         match self._color:
             case PlayerColor.RED:
-                move = max(minimax.minimax_decision(self._state, 'r',0), key=lambda x:x[0])
+                move = minimax.minimax_value(self._state, self._color, 2,-1000000000,1000000000,self._game_turns)
                 print("red", move)
+                self._game_turns+=1
                 return move[1]
             case PlayerColor.BLUE:
-                move = max(minimax.minimax_decision(self._state, 'b',0), key=lambda x:x[0])
+                move = minimax.minimax_value(self._state, self._color, 2,-1000000000,1000000000,self._game_turns)
                 print("blue", move)
+                self._game_turns+=1
                 return move[1]
 
     def turn(self, color: PlayerColor, action: Action, **referee: dict):
