@@ -1,9 +1,10 @@
 from copy import copy, deepcopy
 import random
-import math
+import math, json
 
 from referee.game import \
     PlayerColor, Action, SpawnAction, SpreadAction, HexPos, HexDir
+
 
 class MiniMax:
     def __init__(self, color: PlayerColor) -> None:
@@ -13,6 +14,8 @@ class MiniMax:
         self._color = color # true player color in PlayerColor
         self._depth = 0
         self.first = True
+        with open('./agent/factors.json', 'r') as f:
+            self.parameter_dict=json.load(f)[self.color2char(self._color)]
 
     def find_possible_moves(self, state, color: PlayerColor):
         cells = state.find_non_empty_cells()
@@ -34,6 +37,7 @@ class MiniMax:
 
         for empty in empty_cells: #random.choices(list(empty_cells), k=len(empty_cells)):
             possible_moves.append(SpawnAction(HexPos(empty[0],empty[1])))
+        random.shuffle(possible_moves)
         return possible_moves
 
 
@@ -64,52 +68,100 @@ class MiniMax:
 
         if total_sum>=49:
             if color == self._color:
-                return -1000000000
-            return 100000000
+                return -100000
+            return 100000
 
         if len(cells[opponent_color]) == 0:
-            return 1000000000000
+            return 100000
         elif len(cells[our_color])==0:
-            return -100000000000
+            return -100000
         return 0
+
+    def spread_check(self, state, color, cells):
+        # check where our cells are 
+        same_colour_cells = 0
+
+        # for each of our cells, check all neighbouring cells to see if they are the same colour
+        if color == PlayerColor.BLUE: # if we are blue player
+            for cell in cells['b']:
+                    for dir in self._directions: #check each direction
+                        check_colour = state.at(cell[0]+dir.r, cell[1]+dir.q) #(r,q)
+                        if check_colour == 'b':
+                            same_colour_cells += 1
+        else: # if we are red player
+            for cell in cells['r']:
+                    for dir in self._directions: #check each direction
+                        check_colour = state.at(cell[0]+dir.r, cell[1]+dir.q) #(r,q)
+                        if check_colour == 'r':
+                            same_colour_cells += 1
+
+        return same_colour_cells
+
+    def cell_powers(self, cells) -> dict:
+        # this function counts the specific amount of power x cells for both blue and red. Index 0 of the list is the general amount of cells of the specific color
+        power_counter_dict = {PlayerColor.RED: [0 for i in range(8)], PlayerColor.BLUE: [0 for i in range(8)]}
+        for red in cells['r']:
+            power_counter_dict[PlayerColor.RED][red[2]] += 1
+            power_counter_dict[PlayerColor.RED][0] += 1
+            power_counter_dict[PlayerColor.RED][7] += red[2]
+        
+        for blue in cells['b']:
+            power_counter_dict[PlayerColor.BLUE][blue[2]] += 1
+            power_counter_dict[PlayerColor.BLUE][0] += 1
+            power_counter_dict[PlayerColor.BLUE][7] += blue[2]
+        
+        return power_counter_dict
 
     def utility_state_function(self, state, color: PlayerColor) -> float:
         """
         returns a eval value for a given state
         """
         cells = state.find_non_empty_cells()
+        power_counter_dict = self.cell_powers(cells)
 
         #parameters:
-        a_1 = 1
-        a_2 = -1.5
-        b = 0.1
-        power_value = 1.2
-        diff_factor = 0.1
+        if True:
+            a_1=self.parameter_dict['a_1']
+            a_2 = self.parameter_dict['a_2']
+            a_3=self.parameter_dict['a_3']
+            a_4=self.parameter_dict['a_4']
+            a_5=self.parameter_dict['a_5']
+            a_6=self.parameter_dict['a_6']
+            a_tot=self.parameter_dict['a_tot']
+            b=self.parameter_dict['b']
+            island_factor=self.parameter_dict['island_factor']
+        else:
+            a_1=0.5
+            a_2=1.2
+            a_3=1.2
+            a_4=1.55
+            a_5=1.7
+            a_6=1.8
+            a_tot = 3
 
-        blue_utilitiy_value_state = 0
-        blue_value = 0
-        red_utilitiy_value_state = 0
-        red_value = 0
-        blue_count = 1
-        red_count = 1
+            b = 0.1
+            island_factor = 0.1
 
-        for value in cells['b']:
-            blue_utilitiy_value_state += value[2]**power_value
-            blue_value+=value[2]
-            blue_count +=1
-
-        for value in cells['r']:
-            red_utilitiy_value_state += value[2]**power_value
-            red_value += value[2]
-            red_count += 1
-
+        island_value = self.spread_check(state, color, cells)
         final_steps = state.heuristic('b' if color==PlayerColor.BLUE else 'r')
 
+        power_counter_value = a_1 * (power_counter_dict[color][1]-power_counter_dict[color.opponent][1]) + \
+                                a_2 * (power_counter_dict[color][2]-power_counter_dict[color.opponent][2]) + \
+                                a_3 * (power_counter_dict[color][3]-power_counter_dict[color.opponent][3]) + \
+                                a_4 * (power_counter_dict[color][4]-power_counter_dict[color.opponent][4]) + \
+                                a_5 * (power_counter_dict[color][5]-power_counter_dict[color.opponent][5]) + \
+                                a_6 * (power_counter_dict[color][6]-power_counter_dict[color.opponent][6]) + \
+                                a_tot * (power_counter_dict[color][0]-power_counter_dict[color.opponent][0])
+
         if color == PlayerColor.BLUE:
-            return a_1*blue_utilitiy_value_state + a_2 * red_utilitiy_value_state + b*(1/(-1 if final_steps==1 else final_steps)) + diff_factor*(blue_value/blue_count-red_value/red_count)
+            return power_counter_value + \
+                    b*(1/(1 if final_steps==1 else final_steps)) + \
+                    island_value*island_factor
         else:
-            return a_2*blue_utilitiy_value_state + a_1 * red_utilitiy_value_state + b*(1/(-1 if final_steps==1 else final_steps)) + diff_factor*(red_value/red_count-blue_value/blue_count)
-    
+            return power_counter_value + \
+                    b*(1/(1 if final_steps==1 else final_steps)) +\
+                    island_value*island_factor
+        
 
     def minimax_value(self, state, color: PlayerColor, depth, alpha, beta, game_steps):
         #print(color, depth, alpha, beta)
@@ -120,11 +172,11 @@ class MiniMax:
         
         win = self.terminal_state_check(state, color)
         if win!=0 and not (game_steps==1 or game_steps==0):
-            print("winner winner chicken dinner:",state)
+            #print("winner winner chicken dinner:\n", state, win, end='')
             return (win,0)
 
         if color==self._color:
-            max_val = -100000000000
+            max_val = float('-inf')
             best_move = None
             possible_moves = self.find_possible_moves(state, color)
             
@@ -134,13 +186,14 @@ class MiniMax:
                 eval = self.minimax_value(new_state, color.opponent, depth-1, alpha, beta,game_steps+1)[0]
                 if max_val < eval:
                     best_move = move
-                    max_val = max(max_val,eval)
+                    max_val = eval
                 alpha = max(alpha, eval)
                 if beta <= alpha:
                     break
+
             return (max_val, best_move)
         else:
-            min_val = 10000000000000
+            min_val = float('inf')
             best_move = None
             possible_moves = self.find_possible_moves(state, color)
             
@@ -154,14 +207,13 @@ class MiniMax:
                 beta = min(beta, eval)
                 if beta <= alpha:
                     break
+
             return (min_val, best_move)
-        
-        """res = self.minimax_decision(state, other_color, depth-1)
-        if color == self._color:
-            return min(res, key=lambda x:x[0])[0]
-        else:
-            return max(res, key=lambda x:x[0])[0]"""
         
     def color2char(self, color):
         if color == PlayerColor.BLUE: return 'b'
         if color == PlayerColor.RED: return 'r'
+    
+
+    def json2constants(self, json_string) -> dict:
+        self.parameter_dict = json.loads(json_string)
