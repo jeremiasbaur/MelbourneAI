@@ -4,7 +4,7 @@ import random
 
 win_dict = {'b':0,'r':0}
 
-for i in range(10):
+for i in range(20):
     command = 'python -m referee agent agent -v 1'
     command = 'python -m referee agent agent:RandomAgent -v 1'
 
@@ -21,6 +21,9 @@ for i in range(10):
     if 'BLUE' in winner_line:
         print("blue won after:", turn_line)
         win_dict['b']+=1
+
+        if 'action 0' in turn_line:
+            print(lines)
     else:
         print("red won after:", turn_line)
         win_dict['r']+=1

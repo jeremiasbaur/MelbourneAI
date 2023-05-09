@@ -10,10 +10,8 @@ class MiniMax:
     def __init__(self, color: PlayerColor) -> None:
         self._all_cells = set((x, y) for x in range(7) for y in range(7))    
         self._directions = (HexDir.Down, HexDir.Up, HexDir.UpLeft, HexDir.DownLeft, HexDir.DownRight, HexDir.UpRight)
-        self._memo = dict()
         self._color = color # true player color in PlayerColor
         self._depth = 0
-        self.first = True
         with open('./agent/factors.json', 'r') as f:
             self.parameter_dict=json.load(f)[self.color2char(self._color)]
 
@@ -37,22 +35,8 @@ class MiniMax:
 
         for empty in empty_cells: #random.choices(list(empty_cells), k=len(empty_cells)):
             possible_moves.append(SpawnAction(HexPos(empty[0],empty[1])))
-        random.shuffle(possible_moves)
+        #random.shuffle(possible_moves)
         return possible_moves
-
-
-    def minimax_decision(self, state, color: PlayerColor, depth, maximizing_player) -> list:
-        possible_moves = self.find_possible_moves(state, color)
-        #state_hash = hash(state)
-        #self._memo[state_hash] 
-        moves = []
-
-        for move in random.choices(possible_moves, k=5):
-            new_state = deepcopy(state)
-            new_state.apply_action(move, color)
-            moves.append((self.minimax_value(new_state, color, depth), move, depth))
-        return moves
-
 
     def terminal_state_check(self, state, color: PlayerColor):
         # TODO add 343 check
@@ -85,13 +69,13 @@ class MiniMax:
         if color == PlayerColor.BLUE: # if we are blue player
             for cell in cells['b']:
                     for dir in self._directions: #check each direction
-                        check_colour = state.at(cell[0]+dir.r, cell[1]+dir.q) #(r,q)
+                        check_colour = state.at(cell[0]+dir.r, cell[1]+dir.q)[0] #(r,q)
                         if check_colour == 'b':
                             same_colour_cells += 1
         else: # if we are red player
             for cell in cells['r']:
                     for dir in self._directions: #check each direction
-                        check_colour = state.at(cell[0]+dir.r, cell[1]+dir.q) #(r,q)
+                        check_colour = state.at(cell[0]+dir.r, cell[1]+dir.q)[0] #(r,q)
                         if check_colour == 'r':
                             same_colour_cells += 1
 
@@ -112,7 +96,7 @@ class MiniMax:
         
         return power_counter_dict
 
-    def utility_state_function(self, state, color: PlayerColor) -> float:
+    def utility_state_function(self, state, color: PlayerColor, game_steps) -> float:
         """
         returns a eval value for a given state
         """
@@ -121,6 +105,7 @@ class MiniMax:
 
         #parameters:
         if True:
+            # parameters loaded from the parameter dict
             a_1=self.parameter_dict['a_1']
             a_2 = self.parameter_dict['a_2']
             a_3=self.parameter_dict['a_3']
@@ -128,19 +113,28 @@ class MiniMax:
             a_5=self.parameter_dict['a_5']
             a_6=self.parameter_dict['a_6']
             a_tot=self.parameter_dict['a_tot']
+            a_tot_power = self.parameter_dict['a_tot_power']
             b=self.parameter_dict['b']
             island_factor=self.parameter_dict['island_factor']
         else:
+            # hard-coded parameters
             a_1=0.5
             a_2=1.2
             a_3=1.2
             a_4=1.55
             a_5=1.7
             a_6=1.8
-            a_tot = 3
+            a_tot = 1
+            a_tot_power = 3
 
             b = 0.1
             island_factor = 0.1
+
+        if game_steps>=0 and game_steps <= 5:
+            b=0
+
+        if game_steps >= 15:
+            island_factor = 0
 
         island_value = self.spread_check(state, color, cells)
         final_steps = state.heuristic('b' if color==PlayerColor.BLUE else 'r')
@@ -151,22 +145,23 @@ class MiniMax:
                                 a_4 * (power_counter_dict[color][4]-power_counter_dict[color.opponent][4]) + \
                                 a_5 * (power_counter_dict[color][5]-power_counter_dict[color.opponent][5]) + \
                                 a_6 * (power_counter_dict[color][6]-power_counter_dict[color.opponent][6]) + \
-                                a_tot * (power_counter_dict[color][0]-power_counter_dict[color.opponent][0])
+                                a_tot * (power_counter_dict[color][0]-power_counter_dict[color.opponent][0]) + \
+                                a_tot_power * (power_counter_dict[color][7]-power_counter_dict[color.opponent][7])
 
-        if color == PlayerColor.BLUE:
-            return power_counter_value + \
+        value =  power_counter_value + \
                     b*(1/(1 if final_steps==1 else final_steps)) + \
                     island_value*island_factor
+
+        if self._color==color:
+            return value
         else:
-            return power_counter_value + \
-                    b*(1/(1 if final_steps==1 else final_steps)) +\
-                    island_value*island_factor
+            return -value
         
 
     def minimax_value(self, state, color: PlayerColor, depth, alpha, beta, game_steps):
         #print(color, depth, alpha, beta)
         if depth==0:
-            end_val = (self.utility_state_function(state, color),0)
+            end_val = (self.utility_state_function(state, color, game_steps),0)
             #print("reached depth end:", end_val,'\n', state)
             return end_val
         
@@ -213,7 +208,7 @@ class MiniMax:
     def color2char(self, color):
         if color == PlayerColor.BLUE: return 'b'
         if color == PlayerColor.RED: return 'r'
-    
+
 
     def json2constants(self, json_string) -> dict:
         self.parameter_dict = json.loads(json_string)
