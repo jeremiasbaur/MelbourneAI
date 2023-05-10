@@ -40,11 +40,17 @@ class Agent:
 
         minimax = MiniMax(self._color)
         
+        if self._game_turns > 10:
+            depth = 2
+        else:
+            depth = 3
+
         while(True):
-            move = minimax.minimax_value(self._state, self._color, 2,float('-inf'),float('inf'), self._game_turns)
-            if output: print(self._color, move)
+            move = minimax.minimax_value(self._state, self._color, depth,float('-inf'),float('inf'), self._game_turns)
             if move[1] is not None or move[1]!=0:
                 break
+            print(self._color, move)
+            return random.choice(minimax.find_possible_moves(self._state, self._color))
 
         self._game_turns+=1
         return move[1]

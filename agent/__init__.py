@@ -2,5 +2,3 @@
 # Project Part B: Game Playing Agent
 
 from .program import Agent, RandomAgent
-from .minimax_agent import MiniMaxAgent
-from .minimax_yoav import minimax

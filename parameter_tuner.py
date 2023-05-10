@@ -1,11 +1,15 @@
+"""
+programm to test different weightings over multiple games and see win rates
+"""
+GAMES_N = 300
+
 import subprocess
-import json
-import random
 
 win_dict = {'b':0,'r':0}
 
-for i in range(20):
+for i in range(GAMES_N):
     command = 'python -m referee agent agent -v 1'
+    command = 'python -m referee agent:RandomAgent agent -v 1'
     command = 'python -m referee agent agent:RandomAgent -v 1'
 
     # Execute the command and capture the output
@@ -21,11 +25,10 @@ for i in range(20):
     if 'BLUE' in winner_line:
         print("blue won after:", turn_line)
         win_dict['b']+=1
-
-        if 'action 0' in turn_line:
-            print(lines)
     else:
         print("red won after:", turn_line)
         win_dict['r']+=1
+    if 'action 0' in turn_line:
+        print(lines)
 
 print(win_dict)

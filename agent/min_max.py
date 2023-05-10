@@ -12,8 +12,11 @@ class MiniMax:
         self._directions = (HexDir.Down, HexDir.Up, HexDir.UpLeft, HexDir.DownLeft, HexDir.DownRight, HexDir.UpRight)
         self._color = color # true player color in PlayerColor
         self._depth = 0
-        with open('./agent/factors.json', 'r') as f:
-            self.parameter_dict=json.load(f)[self.color2char(self._color)]
+        if False:
+            with open('./agent/factors.json', 'r') as f:
+                self.parameter_dict=json.load(f)[self.color2char(self._color)]
+        else:
+            self.parameter_dict = {"a_1": 0.5, "a_2": 2.1, "a_3": 3.5, "a_4": 4, "a_5": 1.7, "a_6": 3, "a_tot": 5, "b": 1.2, "island_factor": 0, "a_tot_power":10}
 
     def find_possible_moves(self, state, color: PlayerColor):
         cells = state.find_non_empty_cells()
@@ -23,19 +26,23 @@ class MiniMax:
         non_empty_cells = set()
         possible_moves = []
         #print(state, f'our color: {our_color}')
+        total_power = 0
         for cell in cells[our_color]:
             non_empty_cells.add((cell[0],cell[1]))
             for dir in self._directions:
                 possible_moves.append(SpreadAction(HexPos(cell[0],cell[1]),dir))
+            total_power += cell[2]
 
         for cell in cells[opponent_color]:
             non_empty_cells.add((cell[0],cell[1]))
+            total_power += cell[2]
         
         empty_cells = self._all_cells - non_empty_cells
 
-        for empty in empty_cells: #random.choices(list(empty_cells), k=len(empty_cells)):
-            possible_moves.append(SpawnAction(HexPos(empty[0],empty[1])))
-        #random.shuffle(possible_moves)
+        if total_power < 49:
+            for empty in empty_cells: #random.choices(list(empty_cells), k=len(empty_cells)):
+                possible_moves.append(SpawnAction(HexPos(empty[0],empty[1])))
+        random.shuffle(possible_moves)
         return possible_moves
 
     def terminal_state_check(self, state, color: PlayerColor):
@@ -96,13 +103,13 @@ class MiniMax:
         
         return power_counter_dict
 
-    def utility_state_function(self, state, color: PlayerColor, game_steps) -> float:
+    def utility_state_function(self, state, game_steps) -> float:
         """
         returns a eval value for a given state
         """
         cells = state.find_non_empty_cells()
         power_counter_dict = self.cell_powers(cells)
-
+        color = self._color
         #parameters:
         if True:
             # parameters loaded from the parameter dict
@@ -152,17 +159,14 @@ class MiniMax:
                     b*(1/(1 if final_steps==1 else final_steps)) + \
                     island_value*island_factor
 
-        if self._color==color:
-            return value
-        else:
-            return -value
+        return value
         
 
     def minimax_value(self, state, color: PlayerColor, depth, alpha, beta, game_steps):
         #print(color, depth, alpha, beta)
         if depth==0:
-            end_val = (self.utility_state_function(state, color, game_steps),0)
-            #print("reached depth end:", end_val,'\n', state)
+            end_val = (self.utility_state_function(state, game_steps),0)
+            #print("reached depth end:", end_val,'\n', state, color)
             return end_val
         
         win = self.terminal_state_check(state, color)
@@ -182,7 +186,7 @@ class MiniMax:
                 if max_val < eval:
                     best_move = move
                     max_val = eval
-                alpha = max(alpha, eval)
+                alpha = max(alpha, max_val)
                 if beta <= alpha:
                     break
 
@@ -195,11 +199,11 @@ class MiniMax:
             for move in possible_moves: #random.choices(possible_moves, k=10):
                 new_state = deepcopy(state)
                 new_state.apply_action(move, self.color2char(color))
-                eval = self.minimax_value(new_state, color.opponent, depth-1, alpha, beta, game_steps+1)[0]
+                eval = self.minimax_value(new_state, self._color, depth-1, alpha, beta, game_steps+1)[0]
                 if min_val > eval:
                     best_move = move
                     min_val = eval
-                beta = min(beta, eval)
+                beta = min(beta, min_val)
                 if beta <= alpha:
                     break
 
