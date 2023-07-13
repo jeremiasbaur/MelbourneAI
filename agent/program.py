@@ -13,6 +13,8 @@ from .game_state import GameState
 # intended to serve as an example of how to use the referee API -- obviously
 # this is not a valid strategy for actually playing the game!
 
+output = False
+
 class Agent:
     def __init__(self, color: PlayerColor, **referee: dict):
         """
@@ -22,11 +24,12 @@ class Agent:
         self._state = GameState()
         self._game_turns = 0
 
-        match color:
-            case PlayerColor.RED:
-                print("Testing: I am playing as red")
-            case PlayerColor.BLUE:
-                print("Testing: I am playing as blue")
+        if output:
+            match color:
+                case PlayerColor.RED:
+                    print("Testing: I am playing as red")
+                case PlayerColor.BLUE:
+                    print("Testing: I am playing as blue")
 
     def action(self, **referee: dict) -> Action:
         """
@@ -35,19 +38,22 @@ class Agent:
         if self._game_turns == 0:
             return SpawnAction(HexPos(3, 3)) # doesn't matter where we spawn, every pos is the same
 
-        minimax = MiniMax(self.color2char(self._color))
+        minimax = MiniMax(self._color)
         
-        #print(self._state)
+        if self._game_turns > 10:
+            depth = 2
+        else:
+            depth = 3
 
-        match self._color:
-            case PlayerColor.RED:
-                move = max(minimax.minimax_decision(self._state, 'r',0), key=lambda x:x[0])
-                print("red", move)
-                return move[1]
-            case PlayerColor.BLUE:
-                move = max(minimax.minimax_decision(self._state, 'b',0), key=lambda x:x[0])
-                print("blue", move)
-                return move[1]
+        while(True):
+            move = minimax.minimax_value(self._state, self._color, depth,float('-inf'),float('inf'), self._game_turns)
+            if move[1] is not None or move[1]!=0:
+                break
+            print(self._color, move)
+            return random.choice(minimax.find_possible_moves(self._state, self._color))
+
+        self._game_turns+=1
+        return move[1]
 
     def turn(self, color: PlayerColor, action: Action, **referee: dict):
         """
@@ -56,13 +62,14 @@ class Agent:
         self._state.apply_action(action, self.color2char(color))
         self._game_turns += 1
 
-        match action:
-            case SpawnAction(cell):
-                print(f"Testing: {color} SPAWN at {cell}")
-                pass
-            case SpreadAction(cell, direction):
-                print(f"Testing: {color} SPREAD from {cell}, {direction}")
-                pass
+        if output:
+            match action:
+                case SpawnAction(cell):
+                    print(f"Testing: {color} SPAWN at {cell}")
+                    pass
+                case SpreadAction(cell, direction):
+                    print(f"Testing: {color} SPREAD from {cell}, {direction}")
+                    pass
 
     def color2char(self, color):
         if color == PlayerColor.BLUE: return 'b'
@@ -77,11 +84,12 @@ class RandomAgent:
         self._state = GameState()
         self._game_turns = 0
 
-        match color:
-            case PlayerColor.RED:
-                print(f"Testing: I am playing as red {self._color}")
-            case PlayerColor.BLUE:
-                print(f"Testing: I am playing as blue {self._color}")
+        if output:
+            match color:
+                case PlayerColor.RED:
+                    print(f"Testing: I am playing as red {self._color}")
+                case PlayerColor.BLUE:
+                    print(f"Testing: I am playing as blue {self._color}")
 
     def action(self, **referee: dict) -> Action:
         """
@@ -90,21 +98,10 @@ class RandomAgent:
         if self._game_turns == 0:
             return SpawnAction(HexPos(3, 3)) # doesn't matter where we spawn, every pos is the same
 
-        minimax = MiniMax(self.color2char(self._color))
+        minimax = MiniMax(self._color)
 
         moves = minimax.find_possible_moves(self._state, self._color)
-
-        #print(moves)
-
         return random.choice(moves)
-
-        match self._color:
-            case PlayerColor.RED:
-                move = max(minimax.minimax_decision(self._state, 'r'))
-                return move[1]
-            case PlayerColor.BLUE:
-                move = max(minimax.minimax_decision(self._state, 'r'))
-                return move[1]
 
     def turn(self, color: PlayerColor, action: Action, **referee: dict):
         """
@@ -112,14 +109,14 @@ class RandomAgent:
         """
         self._state.apply_action(action, self.color2char(color))
         self._game_turns += 1
-
-        match action:
-            case SpawnAction(cell):
-                print(f"Testing: {color} SPAWN at {cell}")
-                pass
-            case SpreadAction(cell, direction):
-                print(f"Testing: {color} SPREAD from {cell}, {direction}")
-                pass
+        if output:
+            match action:
+                case SpawnAction(cell):
+                    print(f"Testing: {color} SPAWN at {cell}")
+                    pass
+                case SpreadAction(cell, direction):
+                    print(f"Testing: {color} SPREAD from {cell}, {direction}")
+                    pass
 
     def color2char(self, color):
         if color == PlayerColor.BLUE: return 'b'
